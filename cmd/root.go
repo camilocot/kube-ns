@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/camilocot/kubernetes-ns-default-netpol/config"
-	"github.com/camilocot/kubernetes-ns-default-netpol/pkg/client"
+	"github.com/camilocot/kube-ns/config"
+	"github.com/camilocot/kube-ns/pkg/client"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

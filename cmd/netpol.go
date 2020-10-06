@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/camilocot/kubernetes-ns-default-netpol/config"
+	"github.com/camilocot/kube-ns/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -9,19 +9,26 @@ import (
 // netpolConfigCmd represents the netpol subcommand
 var netpolConfigCmd = &cobra.Command{
 	Use:   "netpol",
-	Short: "specific netpol configuration",
-	Long:  `specific netpol configuration`,
+	Short: "netpol configuration",
+	Long:  `netpol configuration via annotations`,
 	Run: func(cmd *cobra.Command, args []string) {
 		conf, err := config.New()
 		if err != nil {
 			logrus.Fatal(err)
 		}
 
-		recipe, err := cmd.Flags().GetString("recipe")
+		enabled, err := cmd.Flags().GetBool("enabled")
 		if err == nil {
-			if len(recipe) > 0 {
-				conf.NetPol.Recipe = recipe
-			}
+			conf.NetPol.Enabled = enabled
+
+		} else {
+			logrus.Fatal(err)
+		}
+
+		annotation, err := cmd.Flags().GetString("annotation")
+		if err == nil {
+			conf.NetPol.Annotation = annotation
+
 		} else {
 			logrus.Fatal(err)
 		}
@@ -33,5 +40,6 @@ var netpolConfigCmd = &cobra.Command{
 }
 
 func init() {
-	netpolConfigCmd.Flags().StringP("recipe", "r", "", "Specify netpol recipe (deny-all or none)")
+	netpolConfigCmd.Flags().Bool("enabled", true, "Enable or disable netpol creation)")
+	netpolConfigCmd.Flags().String("annotation", "kubens/netpol.recipe", "Namespace annotation setting the netpol recipe (deny-all)")
 }

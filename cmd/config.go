@@ -24,9 +24,9 @@ config command allows configuration of ~/.kubens.yaml for running kubens`,
 
 var configAddCmd = &cobra.Command{
 	Use:   "add",
-	Short: "add webhook config to ~/.kubens.yaml",
+	Short: "add config to ~/.kubens.yaml",
 	Long: `
-Adds webhook config to ~/.kubens.yaml`,
+Adds config to ~/.kubens.yaml`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},

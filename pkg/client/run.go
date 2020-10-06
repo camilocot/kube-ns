@@ -3,9 +3,9 @@ package client
 import (
 	"log"
 
-	"github.com/camilocot/kubernetes-ns-default-netpol/config"
-	"github.com/camilocot/kubernetes-ns-default-netpol/pkg/controller"
-	"github.com/camilocot/kubernetes-ns-default-netpol/pkg/handlers"
+	"github.com/camilocot/kube-ns/config"
+	"github.com/camilocot/kube-ns/pkg/controller"
+	"github.com/camilocot/kube-ns/pkg/handlers"
 )
 
 // Run runs the event loop processing with given handler
@@ -20,7 +20,7 @@ func ParseEventHandler(conf *config.Config) handlers.Handler {
 
 	var eventHandler handlers.Handler
 
-	eventHandler = new(handlers.Default)
+	eventHandler = new(handlers.HandlerConfig)
 	if err := eventHandler.Init(conf); err != nil {
 		log.Fatal(err)
 	}

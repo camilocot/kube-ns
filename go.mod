@@ -1,4 +1,4 @@
-module github.com/camilocot/kubernetes-ns-default-netpol
+module github.com/camilocot/kube-ns
 
 go 1.13
 

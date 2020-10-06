@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/camilocot/kubernetes-ns-default-netpol/config"
-	"github.com/camilocot/kubernetes-ns-default-netpol/pkg/event"
-	"github.com/camilocot/kubernetes-ns-default-netpol/pkg/handlers"
-	"github.com/camilocot/kubernetes-ns-default-netpol/pkg/utils"
+	"github.com/camilocot/kube-ns/config"
+	"github.com/camilocot/kube-ns/pkg/event"
+	"github.com/camilocot/kube-ns/pkg/handlers"
+	"github.com/camilocot/kube-ns/pkg/utils"
 	"github.com/sirupsen/logrus"
 
 	v1 "k8s.io/api/core/v1"
@@ -213,10 +213,12 @@ func (c *Controller) processItem(newEvent Event) error {
 		// Could be Replaced by using Delta or DeltaFIFO
 		if objectMeta.CreationTimestamp.Sub(serverStartTime).Seconds() > 0 {
 			kbEvent := event.Event{
-				Name:   objectMeta.Name,
-				Reason: "Created",
+				Name:        objectMeta.Name,
+				Reason:      "Created",
+				Annotations: objectMeta.Annotations,
 			}
 			c.eventHandler.Handle(kbEvent, c.clientset)
+
 			return nil
 		}
 	case "update":
@@ -224,15 +226,17 @@ func (c *Controller) processItem(newEvent Event) error {
 		- enahace update event processing in such a way that, it send alerts about what got changed.
 		*/
 		kbEvent := event.Event{
-			Name:   newEvent.key,
-			Reason: "Updated",
+			Name:        newEvent.key,
+			Reason:      "Updated",
+			Annotations: objectMeta.Annotations,
 		}
 		c.eventHandler.Handle(kbEvent, c.clientset)
 		return nil
 	case "delete":
 		kbEvent := event.Event{
-			Name:   newEvent.key,
-			Reason: "Deleted",
+			Name:        newEvent.key,
+			Reason:      "Deleted",
+			Annotations: objectMeta.Annotations,
 		}
 		c.eventHandler.Handle(kbEvent, c.clientset)
 		return nil

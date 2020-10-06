@@ -21,7 +21,8 @@ var (
 
 // NetPol contains network policy configuration
 type NetPol struct {
-	Recipe string `json:"recipe"`
+	Enabled    bool   `json:"enabled"`
+	Annotation string `json:"annotation"`
 }
 
 // Config struct contains kubewatch configuration
@@ -29,11 +30,6 @@ type Config struct {
 	// Configure default network policy to apply
 	NetPol NetPol `json:"netpol"`
 }
-
-// Default Network policies definition
-const (
-	DenyAll = "deny-all"
-)
 
 // New creates new config object
 func New() (*Config, error) {

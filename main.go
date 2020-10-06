@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/camilocot/kubernetes-ns-default-netpol/cmd"
+	"github.com/camilocot/kube-ns/cmd"
 )
 
 func main() {
