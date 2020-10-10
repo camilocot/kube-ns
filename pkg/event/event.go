@@ -14,14 +14,20 @@ type Event struct {
 }
 
 // New create new KubewatchEvent
-func New(obj interface{}, action string) Event {
+func New(obj interface{}, action string) (kbEvent Event, err error) {
 
-	kbEvent := Event{
-		Reason:      action,
-		Name:        utils.GetObjectMetaData(obj).Name,
-		Annotations: utils.GetObjectMetaData(obj).Annotations,
+	metadata, err := utils.GetObjectMetaData(obj)
+
+	if err != nil {
+		return kbEvent, err
 	}
-	return kbEvent
+
+	kbEvent = Event{
+		Reason:      action,
+		Name:        metadata.Name,
+		Annotations: metadata.Annotations,
+	}
+	return kbEvent, err
 }
 
 // Message returns event message in standard format.

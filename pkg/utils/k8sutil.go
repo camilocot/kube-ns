@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/sirupsen/logrus"
 	api_v1 "k8s.io/api/core/v1"
+	net_v1 "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -50,9 +52,16 @@ func GetClientOutOfCluster() kubernetes.Interface {
 }
 
 // GetObjectMetaData returns metadata of a given k8s object
-func GetObjectMetaData(obj interface{}) (objectMeta meta_v1.ObjectMeta) {
+func GetObjectMetaData(obj interface{}) (objectMeta meta_v1.ObjectMeta, err error) {
 
-	objectMeta = obj.(*api_v1.Namespace).ObjectMeta
+	switch object := obj.(type) {
+	case *api_v1.Namespace:
+		objectMeta = object.ObjectMeta
+	case *net_v1.NetworkPolicy:
+		objectMeta = object.ObjectMeta
+	default:
+		err = fmt.Errorf("don't know about type %T", object)
+	}
 
-	return objectMeta
+	return objectMeta, err
 }

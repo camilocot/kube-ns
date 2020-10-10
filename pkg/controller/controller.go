@@ -32,10 +32,8 @@ var serverStartTime time.Time
 
 // Event indicate the informerEvent
 type Event struct {
-	key          string
-	eventType    string
-	namespace    string
-	resourceType string
+	key       string
+	eventType string
 }
 
 // Controller object
@@ -71,7 +69,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 		cache.Indexers{},
 	)
 
-	c := newResourceController(kubeClient, eventHandler, informer, "namespace")
+	c := newResourceController(kubeClient, eventHandler, informer)
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 
@@ -83,7 +81,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 	<-sigterm
 }
 
-func newResourceController(client kubernetes.Interface, eventHandler handlers.Handler, informer cache.SharedIndexInformer, resourceType string) *Controller {
+func newResourceController(client kubernetes.Interface, eventHandler handlers.Handler, informer cache.SharedIndexInformer) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	var newEvent Event
 	var err error
@@ -91,8 +89,7 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 		AddFunc: func(obj interface{}) {
 			newEvent.key, err = cache.MetaNamespaceKeyFunc(obj)
 			newEvent.eventType = "create"
-			newEvent.resourceType = resourceType
-			logrus.WithField("pkg", "kubens-"+resourceType).Infof("Processing add to %v: %s", resourceType, newEvent.key)
+			logrus.Infof("Processing namespace %s added", newEvent.key)
 			if err == nil {
 				queue.Add(newEvent)
 			}
@@ -100,18 +97,7 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 		UpdateFunc: func(old, new interface{}) {
 			newEvent.key, err = cache.MetaNamespaceKeyFunc(old)
 			newEvent.eventType = "update"
-			newEvent.resourceType = resourceType
-			logrus.WithField("pkg", "kubens-"+resourceType).Infof("Processing update to %v: %s", resourceType, newEvent.key)
-			if err == nil {
-				queue.Add(newEvent)
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			newEvent.key, err = cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			newEvent.eventType = "delete"
-			newEvent.resourceType = resourceType
-			newEvent.namespace = utils.GetObjectMetaData(obj).Namespace
-			logrus.WithField("pkg", "kubens-"+resourceType).Infof("Processing delete to %v: %s", resourceType, newEvent.key)
+			logrus.Infof("Processing namespace %s updated", newEvent.key)
 			if err == nil {
 				queue.Add(newEvent)
 			}
@@ -119,7 +105,7 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 	})
 
 	return &Controller{
-		logger:       logrus.WithField("pkg", "kubens-"+resourceType),
+		logger:       logrus.NewEntry(logrus.New()),
 		clientset:    client,
 		informer:     informer,
 		queue:        queue,
@@ -187,22 +173,21 @@ func (c *Controller) processNextItem() bool {
 	return true
 }
 
-/* TODOs
-- Enhance event creation using client-side cacheing machanisms - pending
-*/
-
 func (c *Controller) processItem(newEvent Event) error {
 	obj, _, err := c.informer.GetIndexer().GetByKey(newEvent.key)
 	if err != nil {
 		return fmt.Errorf("Error fetching object with key %s from store: %v", newEvent.key, err)
 	}
 	// get object's metedata
-	objectMeta := utils.GetObjectMetaData(obj)
+	objectMeta, err := utils.GetObjectMetaData(obj)
+
+	if err != nil {
+		return fmt.Errorf("err %s getting metadata info", err)
+	}
 
 	// namespace retrived from event key incase namespace value is empty
-	if newEvent.namespace == "" && strings.Contains(newEvent.key, "/") {
+	if strings.Contains(newEvent.key, "/") {
 		substring := strings.Split(newEvent.key, "/")
-		newEvent.namespace = substring[0]
 		newEvent.key = substring[1]
 	}
 
@@ -222,20 +207,9 @@ func (c *Controller) processItem(newEvent Event) error {
 			return nil
 		}
 	case "update":
-		/* TODOs
-		- enahace update event processing in such a way that, it send alerts about what got changed.
-		*/
 		kbEvent := event.Event{
 			Name:        newEvent.key,
 			Reason:      "Updated",
-			Annotations: objectMeta.Annotations,
-		}
-		c.eventHandler.Handle(kbEvent, c.clientset)
-		return nil
-	case "delete":
-		kbEvent := event.Event{
-			Name:        newEvent.key,
-			Reason:      "Deleted",
 			Annotations: objectMeta.Annotations,
 		}
 		c.eventHandler.Handle(kbEvent, c.clientset)

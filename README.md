@@ -8,7 +8,28 @@ TBC
 
 ## Install
 
-TBC
+### Local Installation
+
+#### Using go package installer:
+
+```console
+# Download and install kubens
+$ go get -u github.com/camilocot/kube-ns
+
+# Enable default network policy creation
+$ kube-ns config add netpol --enabled
+
+# start kubens server
+$ kube-ns
+
+INFO[0000] Starting kubens controller
+INFO[0000] Processing namespace default added
+INFO[0000] Processing namespace kube-public added
+INFO[0000] Processing namespace kube-node-lease added
+INFO[0000] Processing namespace kube-system added
+INFO[0000] kubens controller synced and ready
+
+```
 
 ## Configure
 

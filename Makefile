@@ -19,6 +19,9 @@ build:
 docker-image:
 	@docker build -t "${BINARY}" .
 
+test:
+	"$(GOCMD)" test -race -v ./...
+
 stop:
 	@docker stop "${BINARY}"
 
